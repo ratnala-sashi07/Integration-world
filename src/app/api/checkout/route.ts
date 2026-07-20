@@ -37,13 +37,15 @@ export async function POST(req: Request) {
     .maybeSingle();
   if (existing) return NextResponse.json({ url: "/dashboard" });
 
-  // Stripe requires an absolute http(s) URL for success/cancel. Fall back to the
-  // request origin if NEXT_PUBLIC_SITE_URL isn't a valid URL.
-  let base = env.siteUrl;
+  // Derive the site origin from the actual request — bulletproof on Vercel and
+  // avoids depending on a possibly-misconfigured NEXT_PUBLIC_SITE_URL.
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+  const proto = req.headers.get("x-forwarded-proto") ?? "https";
+  let base = host ? `${proto}://${host}` : env.siteUrl;
   try {
     new URL(base);
   } catch {
-    base = new URL(req.url).origin;
+    base = env.siteUrl;
   }
 
   try {
