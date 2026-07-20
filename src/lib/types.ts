@@ -27,6 +27,9 @@ export interface Course {
   currency: string;
   level: string | null;
   instructor_name: string | null;
+  instructor_title: string | null;
+  instructor_bio: string | null;
+  instructor_url: string | null;
   duration_hours: string | null;
   highlights: CourseHighlight[];
   outcomes: string[];

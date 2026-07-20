@@ -61,6 +61,9 @@ create table if not exists public.courses (
   currency        text not null default 'usd',
   level           text default 'beginner',
   instructor_name text,
+  instructor_title text,
+  instructor_bio   text,
+  instructor_url   text,
   duration_hours  text,          -- e.g. '50–70 hours'
   highlights      jsonb not null default '[]'::jsonb,  -- [{"label":"Modules","value":"25"}]
   outcomes        jsonb not null default '[]'::jsonb,  -- ["Design and build AI Agents...", ...]

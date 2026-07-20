@@ -102,6 +102,18 @@ export default async function CourseEditor({
             <label className="label">Duration (text)</label>
             <input name="duration_hours" className="input" defaultValue={c.duration_hours ?? ""} placeholder="50–70 hours" />
           </div>
+          <div className="sm:col-span-2">
+            <label className="label">Instructor title / tagline</label>
+            <input name="instructor_title" className="input" defaultValue={c.instructor_title ?? ""} placeholder="Oracle Integration Architect · AI Agent Specialist" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="label">Instructor LinkedIn / profile URL</label>
+            <input name="instructor_url" className="input" defaultValue={c.instructor_url ?? ""} placeholder="https://www.linkedin.com/in/..." />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="label">Instructor bio</label>
+            <textarea name="instructor_bio" className="input min-h-24" defaultValue={c.instructor_bio ?? ""} />
+          </div>
           <div>
             <label className="label">Price</label>
             <input name="price" type="number" step="0.01" min="0" className="input" defaultValue={(c.price_cents / 100).toString()} />

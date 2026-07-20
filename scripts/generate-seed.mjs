@@ -19,6 +19,10 @@ const oracleCourse = {
   title: "Oracle Fusion AI Agent Studio — Complete Course 2026",
   subtitle: "25 Modules · 15 Real Enterprise Projects · 50–70 Hours",
   instructor: "Umasankar Ratnala",
+  instructorTitle: "Oracle Integration Architect · AI Agent Specialist · Oracle Fusion Cloud",
+  instructorUrl: "https://www.linkedin.com/in/umasankar-ratnala-222a63197/",
+  instructorBio:
+    "Umasankar Ratnala is an Oracle Integration Architect and AI Agent Specialist with deep, hands-on experience across Oracle Fusion Cloud (HCM & ERP), Oracle Integration Cloud (OIC), and enterprise AI. He designs and ships production-grade AI Agents and integrations, and teaches practitioners how to build the same — from fundamentals through to real enterprise projects.",
   duration: "50–70 hours",
   level: "advanced",
   price_cents: 19900,
@@ -219,8 +223,8 @@ function courseBlock(c) {
   lines.push("begin");
   // Make the seed re-runnable: remove any prior copy of this course (cascades).
   lines.push(`  delete from public.courses where slug = ${q(c.slug)};`);
-  lines.push(`  insert into public.courses (slug, title, subtitle, description, thumbnail_url, price_cents, currency, level, instructor_name, duration_hours, highlights, outcomes, published)`);
-  lines.push(`  values (${q(c.slug)}, ${q(c.title)}, ${q(c.subtitle)}, ${q(c.description)}, ${q(c.thumbnail)}, ${c.price_cents}, ${q(c.currency)}, ${q(c.level)}, ${q(c.instructor)}, ${q(c.duration)}, ${jsonb(c.highlights)}, ${jsonb(c.outcomes)}, true)`);
+  lines.push(`  insert into public.courses (slug, title, subtitle, description, thumbnail_url, price_cents, currency, level, instructor_name, instructor_title, instructor_bio, instructor_url, duration_hours, highlights, outcomes, published)`);
+  lines.push(`  values (${q(c.slug)}, ${q(c.title)}, ${q(c.subtitle)}, ${q(c.description)}, ${q(c.thumbnail)}, ${c.price_cents}, ${q(c.currency)}, ${q(c.level)}, ${q(c.instructor)}, ${q(c.instructorTitle)}, ${q(c.instructorBio)}, ${q(c.instructorUrl)}, ${q(c.duration)}, ${jsonb(c.highlights)}, ${jsonb(c.outcomes)}, true)`);
   lines.push("  returning id into v_course;");
 
   c.modules.forEach(([title, lessons], mi) => {
