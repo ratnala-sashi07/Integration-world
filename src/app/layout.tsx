@@ -20,9 +20,21 @@ export default function RootLayout({
         <Navbar />
         <main className="flex-1">{children}</main>
         <footer className="border-t mt-16">
-          <div className="mx-auto max-w-6xl px-4 py-8 text-sm text-muted flex flex-wrap items-center justify-between gap-3">
-            <span>© {new Date().getFullYear()} Integration World</span>
-            <span>Built with Next.js · Supabase · Stripe · Mux</span>
+          <div className="mx-auto max-w-6xl px-4 py-8 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-2 font-semibold">
+              <span className="grid place-items-center h-7 w-7 rounded-md bg-brand-600 text-white text-sm">
+                IW
+              </span>
+              Integration World
+            </div>
+            <nav className="flex items-center gap-5 text-sm text-muted">
+              <a href="/courses" className="hover:text-brand-600 transition-colors">Courses</a>
+              <a href="/login" className="hover:text-brand-600 transition-colors">Log in</a>
+              <a href="/signup" className="hover:text-brand-600 transition-colors">Sign up</a>
+            </nav>
+            <span className="text-sm text-muted">
+              © {new Date().getFullYear()} Integration World
+            </span>
           </div>
         </footer>
       </body>

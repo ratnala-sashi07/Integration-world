@@ -46,9 +46,53 @@
   border-color: var(--border);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-brand-200);
+  color: var(--color-brand-900);
+}
+
+/* Keyboard focus ring for accessibility + a more "alive" feel */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Content entrance animation */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+main {
+  animation: fade-in-up 0.35s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  main {
+    animation: none;
+  }
 }
 
 /* Component classes written as plain CSS (Tailwind v4 won't @apply custom classes). */
@@ -65,8 +109,9 @@ body {
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.25rem;
-  transition: all 0.15s ease;
   cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease,
+    transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.18s ease;
 }
 .btn:disabled,
 .btn-primary:disabled,
@@ -78,19 +123,23 @@ body {
 .btn-primary {
   background: var(--color-brand-600);
   color: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 2px rgba(15, 23, 41, 0.12);
 }
 .btn-primary:hover {
   background: var(--color-brand-700);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -4px rgba(31, 76, 130, 0.45);
 }
 .btn-primary:active {
-  transform: scale(0.98);
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 1px 2px rgba(15, 23, 41, 0.12);
 }
 .btn-ghost {
   background: transparent;
 }
 .btn-ghost:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(31, 76, 130, 0.08);
+  color: var(--color-brand-700);
 }
 .btn-outline {
   border: 1px solid var(--border);
@@ -99,12 +148,18 @@ body {
 .btn-outline:hover {
   border-color: var(--color-brand-400);
   color: var(--color-brand-600);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(15, 23, 41, 0.18);
+}
+.btn-outline:active {
+  transform: translateY(0);
 }
 .card {
   border-radius: 0.75rem;
   border: 1px solid var(--border);
   background: var(--surface);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(15, 23, 41, 0.05);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
 .input {
   width: 100%;
@@ -129,4 +184,50 @@ body {
 }
 .text-muted {
   color: var(--muted);
+}
+
+/* Loading skeleton shimmer */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  border-radius: 0.5rem;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--foreground) 6%, transparent),
+    transparent
+  );
+  animation: shimmer 1.3s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Nav link underline grow on hover */
+.nav-underline {
+  position: relative;
+}
+.nav-underline::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.35rem;
+  height: 2px;
+  background: var(--color-brand-500);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+.nav-underline:hover::after {
+  transform: scaleX(1);
 }
