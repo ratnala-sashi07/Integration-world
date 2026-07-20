@@ -7,6 +7,8 @@ import { isMuxSigningConfigured } from "@/lib/env";
 import { LearnShell } from "@/components/LearnShell";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { LessonFooter } from "@/components/LessonFooter";
+import { EnrollButton } from "@/components/EnrollButton";
+import { PriceTag } from "@/components/PriceTag";
 
 export default async function LessonPage({
   params,
@@ -94,11 +96,13 @@ export default async function LessonPage({
               </span>
             )}
           </div>
-          <LessonFooter
-            lessonId={lessonId}
-            nextHref={nextHref}
-            initialCompleted={Boolean(progress?.completed)}
-          />
+          {(enrolled || isAdmin) && (
+            <LessonFooter
+              lessonId={lessonId}
+              nextHref={nextHref}
+              initialCompleted={Boolean(progress?.completed)}
+            />
+          )}
         </div>
 
         {lesson.description && (
@@ -107,6 +111,32 @@ export default async function LessonPage({
             <p className="text-muted leading-relaxed whitespace-pre-line">
               {lesson.description}
             </p>
+          </div>
+        )}
+
+        {/* Not enrolled? Prompt to buy and continue the rest of the course. */}
+        {!enrolled && !isAdmin && full && (
+          <div className="mt-8 card p-6 text-center bg-brand-50 border-brand-200">
+            <h2 className="text-xl font-bold">Enjoying the preview?</h2>
+            <p className="text-muted mt-1">
+              Buy the course to unlock all {flat.length} lessons and continue learning.
+            </p>
+            <div className="mt-4 flex flex-col items-center gap-3">
+              <PriceTag
+                priceCents={full.course.price_cents}
+                compareAtCents={full.course.compare_at_price_cents}
+                currency={full.course.currency}
+                size="lg"
+              />
+              <div className="w-full max-w-xs">
+                <EnrollButton
+                  courseId={courseId}
+                  priceCents={full.course.price_cents}
+                  isAuthed
+                  firstLessonId={flat[0]?.id ?? null}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>

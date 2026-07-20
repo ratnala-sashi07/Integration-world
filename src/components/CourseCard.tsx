@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BookOpen, BarChart3 } from "lucide-react";
 import type { Course } from "@/lib/types";
-import { formatPrice } from "@/lib/format";
+import { PriceTag } from "@/components/PriceTag";
 
 export function CourseCard({
   course,
@@ -42,12 +42,14 @@ export function CourseCard({
         {course.subtitle && (
           <p className="text-sm text-muted mt-1 line-clamp-2">{course.subtitle}</p>
         )}
-        <div className="mt-3 flex items-center justify-between">
-          <span className="font-bold text-brand-600">
-            {formatPrice(course.price_cents, course.currency)}
-          </span>
-          <span className="text-sm font-medium text-muted group-hover:text-brand-600">
-            {cta ?? "View course →"}
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <PriceTag
+            priceCents={course.price_cents}
+            compareAtCents={course.compare_at_price_cents}
+            currency={course.currency}
+          />
+          <span className="text-sm font-medium text-muted group-hover:text-brand-600 flex-none">
+            {cta ?? "View →"}
           </span>
         </div>
       </div>

@@ -58,6 +58,7 @@ create table if not exists public.courses (
   description     text,
   thumbnail_url   text,
   price_cents     integer not null default 0,
+  compare_at_price_cents integer not null default 0,  -- original price (strikethrough)
   currency        text not null default 'usd',
   level           text default 'beginner',
   instructor_name text,

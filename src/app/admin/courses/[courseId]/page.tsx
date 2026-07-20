@@ -1,21 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Plus, Trash2, Video, CheckCircle2, FileQuestion, ClipboardList, Eye } from "lucide-react";
+import { Plus, Trash2, FileQuestion, ClipboardList, Eye } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { isMuxConfigured } from "@/lib/env";
 import {
   updateCourse,
   togglePublish,
   deleteCourse,
   addModule,
-  deleteModule,
-  addLesson,
-  deleteLesson,
-  ingestLessonVideo,
   createQuiz,
   createAssignment,
 } from "@/app/admin/actions";
-import { LessonVideoUploader } from "@/components/LessonVideoUploader";
+import { AdminModule } from "@/components/admin/AdminModule";
 import type { Course, Quiz, Assignment, Module, Lesson } from "@/lib/types";
 
 export default async function CourseEditor({
@@ -75,12 +70,6 @@ export default async function CourseEditor({
         </div>
       </div>
 
-      {!isMuxConfigured && (
-        <div className="card border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-          Mux isn&apos;t configured yet — add your Mux keys to <code>.env.local</code> to attach
-          videos. You can still paste a Mux playback ID manually per lesson.
-        </div>
-      )}
 
       {/* Details */}
       <section className="card p-6">
@@ -116,8 +105,12 @@ export default async function CourseEditor({
             <textarea name="instructor_bio" className="input min-h-24" defaultValue={c.instructor_bio ?? ""} />
           </div>
           <div>
-            <label className="label">Price</label>
+            <label className="label">Selling price (what they pay)</label>
             <input name="price" type="number" step="0.01" min="0" className="input" defaultValue={(c.price_cents / 100).toString()} />
+          </div>
+          <div>
+            <label className="label">Original price (struck through, optional)</label>
+            <input name="compare_price" type="number" step="0.01" min="0" className="input" defaultValue={c.compare_at_price_cents ? (c.compare_at_price_cents / 100).toString() : ""} placeholder="e.g. 299" />
           </div>
           <div>
             <label className="label">Currency</label>
@@ -155,96 +148,21 @@ export default async function CourseEditor({
 
       {/* Curriculum */}
       <section>
-        <h2 className="font-semibold mb-4">Curriculum</h2>
-        <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold">Curriculum</h2>
+          <span className="text-sm text-muted">
+            {modules.length} modules · click a module to expand
+          </span>
+        </div>
+        <div className="space-y-3">
           {modules.map((m, mi) => (
-            <div key={m.id} className="card p-5">
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <h3 className="font-semibold">
-                  {mi + 1}. {m.title}
-                </h3>
-                <form action={deleteModule.bind(null, m.id, courseId)}>
-                  <button className="btn-ghost text-red-600" title="Delete module">
-                    <Trash2 size={16} />
-                  </button>
-                </form>
-              </div>
-
-              {/* Lessons */}
-              <ul className="space-y-2 mb-4">
-                {m.lessons.map((l) => (
-                  <li key={l.id} className="rounded-lg border p-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        {l.mux_playback_id ? (
-                          <CheckCircle2 size={16} className="text-green-600 flex-none" />
-                        ) : (
-                          <Video size={16} className="text-muted flex-none" />
-                        )}
-                        <span className="truncate">{l.title}</span>
-                        {l.is_preview && (
-                          <span className="rounded bg-brand-100 text-brand-700 px-1.5 py-0.5 text-xs">
-                            preview
-                          </span>
-                        )}
-                      </div>
-                      <form action={deleteLesson.bind(null, l.id, courseId)}>
-                        <button className="btn-ghost text-red-600" title="Delete lesson">
-                          <Trash2 size={15} />
-                        </button>
-                      </form>
-                    </div>
-
-                    {/* Attach video — upload from PC (recommended) or paste a link */}
-                    {l.mux_playback_id && (
-                      <p className="mt-2 text-xs text-green-700">
-                        ✓ Video attached ({l.mux_playback_id.slice(0, 12)}…). Upload again to replace it.
-                      </p>
-                    )}
-                    {isMuxConfigured ? (
-                      <div className="mt-2 space-y-3">
-                        <LessonVideoUploader lessonId={l.id} />
-                        <details>
-                          <summary className="text-xs text-muted cursor-pointer">
-                            or paste a video link (Google Drive / Dropbox / direct URL)
-                          </summary>
-                          <form action={ingestLessonVideo} className="mt-2 flex flex-wrap gap-2">
-                            <input type="hidden" name="lessonId" value={l.id} />
-                            <input type="hidden" name="courseId" value={courseId} />
-                            <input
-                              name="url"
-                              className="input flex-1 min-w-52 text-xs py-1.5"
-                              placeholder="Paste a share link — best for files under 100 MB"
-                            />
-                            <button className="btn-outline text-xs py-1.5">Ingest link</button>
-                          </form>
-                        </details>
-                      </div>
-                    ) : (
-                      <p className="mt-2 text-xs text-muted">
-                        Add Mux keys to enable video uploads.
-                      </p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-
-              {/* Add lesson */}
-              <form action={addLesson} className="grid sm:grid-cols-[1fr_auto] gap-2 items-end border-t pt-3">
-                <input type="hidden" name="moduleId" value={m.id} />
-                <input type="hidden" name="courseId" value={courseId} />
-                <div className="grid sm:grid-cols-3 gap-2">
-                  <input name="title" className="input py-2 sm:col-span-2" placeholder="New lesson title" required />
-                  <input name="duration" type="number" min="0" className="input py-2" placeholder="secs" />
-                  <label className="flex items-center gap-2 text-sm sm:col-span-3">
-                    <input type="checkbox" name="is_preview" /> Free preview
-                  </label>
-                </div>
-                <button className="btn-outline">
-                  <Plus size={16} /> Add lesson
-                </button>
-              </form>
-            </div>
+            <AdminModule
+              key={m.id}
+              module={m}
+              courseId={courseId}
+              index={mi}
+              defaultOpen={modules.length <= 2}
+            />
           ))}
 
           {/* Add module */}

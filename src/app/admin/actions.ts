@@ -78,6 +78,7 @@ export async function updateCourse(formData: FormData) {
       duration_hours: String(formData.get("duration_hours") || "") || null,
       level: String(formData.get("level") || "beginner"),
       price_cents: Math.round(Number(formData.get("price") || 0) * 100),
+      compare_at_price_cents: Math.round(Number(formData.get("compare_price") || 0) * 100),
       currency: String(formData.get("currency") || "usd"),
       outcomes,
       updated_at: new Date().toISOString(),
@@ -159,57 +160,15 @@ export async function deleteLesson(lessonId: string, courseId: string) {
   revalidatePath(`/admin/courses/${courseId}`);
 }
 
-/**
- * Turn common share links into a URL that returns the raw video bytes, which is
- * what Mux needs to ingest. Google Drive "/view" links serve an HTML page, so we
- * rewrite them to the direct-download endpoint. Dropbox is handled too.
- */
-function toDirectVideoUrl(input: string): string {
-  const url = input.trim();
-
-  // Google Drive: /file/d/<ID>/..., open?id=<ID>, uc?id=<ID>, or ...?id=<ID>
-  const driveId =
-    url.match(/drive\.google\.com\/file\/d\/([^/]+)/)?.[1] ??
-    url.match(/[?&]id=([^&]+)/)?.[1];
-  if (url.includes("drive.google.com") && driveId) {
-    return `https://drive.google.com/uc?export=download&id=${driveId}`;
-  }
-
-  // Dropbox: force direct download
-  if (url.includes("dropbox.com")) {
-    return url.replace("?dl=0", "?dl=1").replace("www.dropbox.com", "dl.dropboxusercontent.com");
-  }
-
-  return url;
-}
-
-/**
- * Create a Mux asset from a source URL (e.g. a shared Google Drive link) and
- * attach the resulting playback id to a lesson. Mux then downloads and
- * transcodes the file asynchronously (usually under a couple of minutes).
- */
-export async function ingestLessonVideo(formData: FormData) {
+/** Toggle whether a lesson is a free preview (unlocked) or locked. */
+export async function toggleLessonPreview(
+  lessonId: string,
+  courseId: string,
+  isPreview: boolean
+) {
   await assertAdmin();
-  if (!isMuxConfigured) throw new Error("Mux is not configured.");
-  const lessonId = String(formData.get("lessonId"));
-  const courseId = String(formData.get("courseId"));
-  const raw = String(formData.get("url") || "").trim();
-  if (!raw) throw new Error("Provide a source video URL.");
-  const url = toDirectVideoUrl(raw);
-
-  const asset = await mux.video.assets.create({
-    inputs: [{ url }],
-    playback_policy: [isMuxSigningConfigured ? "signed" : "public"],
-    encoding_tier: "smart",
-  });
-  const playbackId = asset.playback_ids?.[0]?.id ?? null;
-
   const admin = createAdminClient();
-  await admin
-    .from("lessons")
-    .update({ mux_asset_id: asset.id, mux_playback_id: playbackId })
-    .eq("id", lessonId);
-
+  await admin.from("lessons").update({ is_preview: isPreview }).eq("id", lessonId);
   revalidatePath(`/admin/courses/${courseId}`);
 }
 

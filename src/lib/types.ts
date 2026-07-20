@@ -24,6 +24,7 @@ export interface Course {
   description: string | null;
   thumbnail_url: string | null;
   price_cents: number;
+  compare_at_price_cents: number;
   currency: string;
   level: string | null;
   instructor_name: string | null;

@@ -68,6 +68,7 @@ export async function POST(req: Request) {
             },
       ],
       metadata: { courseId, userId: user.id },
+      allow_promotion_codes: true, // lets students enter a coupon code at checkout
       success_url: `${base}/dashboard?purchased=${course.slug}`,
       cancel_url: `${base}/courses/${course.slug}?canceled=1`,
     });

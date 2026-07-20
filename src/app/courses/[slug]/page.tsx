@@ -11,9 +11,10 @@ function LinkedInIcon() {
 }
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
-import { formatPrice, totalCourseDuration } from "@/lib/format";
+import { totalCourseDuration } from "@/lib/format";
 import { CurriculumAccordion } from "@/components/CurriculumAccordion";
 import { EnrollButton } from "@/components/EnrollButton";
+import { PriceTag } from "@/components/PriceTag";
 import type { Course, Module, Lesson, ModuleWithLessons } from "@/lib/types";
 
 export default async function CourseDetailPage({
@@ -190,9 +191,12 @@ export default async function CourseDetailPage({
               <img src={c.thumbnail_url} alt="" className="aspect-video w-full object-cover" />
             )}
             <div className="p-5">
-              <div className="text-3xl font-bold">
-                {formatPrice(c.price_cents, c.currency)}
-              </div>
+              <PriceTag
+                priceCents={c.price_cents}
+                compareAtCents={c.compare_at_price_cents}
+                currency={c.currency}
+                size="lg"
+              />
 
               <div className="mt-4">
                 {enrolled ? (
