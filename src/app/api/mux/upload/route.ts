@@ -17,13 +17,23 @@ export async function POST(req: Request) {
     req.headers.get("origin") ??
     (req.headers.get("host") ? `https://${req.headers.get("host")}` : "*");
 
-  const upload = await mux.video.uploads.create({
-    cors_origin: origin,
-    new_asset_settings: {
-      playback_policy: [isMuxSigningConfigured ? "signed" : "public"],
-      encoding_tier: "smart",
-    },
-  });
-
-  return NextResponse.json({ url: upload.url, id: upload.id });
+  try {
+    const upload = await mux.video.uploads.create({
+      cors_origin: origin,
+      new_asset_settings: {
+        playback_policy: [isMuxSigningConfigured ? "signed" : "public"],
+        encoding_tier: "smart",
+      },
+    });
+    return NextResponse.json({ url: upload.url, id: upload.id });
+  } catch (err) {
+    // Surface Mux's real message (e.g. free-plan asset limit) as clean JSON.
+    const anyErr = err as { message?: string; error?: { messages?: string[] } };
+    const message =
+      anyErr?.error?.messages?.join(" ") ||
+      anyErr?.message ||
+      "Could not start the upload.";
+    console.error("Mux upload create error:", message);
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
 }
