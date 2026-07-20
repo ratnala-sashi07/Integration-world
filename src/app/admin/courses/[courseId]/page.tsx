@@ -15,6 +15,7 @@ import {
   createQuiz,
   createAssignment,
 } from "@/app/admin/actions";
+import { LessonVideoUploader } from "@/components/LessonVideoUploader";
 import type { Course, Quiz, Assignment, Module, Lesson } from "@/lib/types";
 
 export default async function CourseEditor({
@@ -194,23 +195,36 @@ export default async function CourseEditor({
                       </form>
                     </div>
 
-                    {/* Attach video via URL (Drive/any) */}
-                    <form action={ingestLessonVideo} className="mt-2 flex flex-wrap gap-2">
-                      <input type="hidden" name="lessonId" value={l.id} />
-                      <input type="hidden" name="courseId" value={courseId} />
-                      <input
-                        name="url"
-                        className="input flex-1 min-w-52 text-xs py-1.5"
-                        placeholder={
-                          l.mux_playback_id
-                            ? `Playback: ${l.mux_playback_id.slice(0, 12)}… (paste a new source URL to replace)`
-                            : "Paste a direct video URL (e.g. shared Drive link) to upload to Mux"
-                        }
-                      />
-                      <button className="btn-outline text-xs py-1.5" disabled={!isMuxConfigured}>
-                        Upload to Mux
-                      </button>
-                    </form>
+                    {/* Attach video — upload from PC (recommended) or paste a link */}
+                    {l.mux_playback_id && (
+                      <p className="mt-2 text-xs text-green-700">
+                        ✓ Video attached ({l.mux_playback_id.slice(0, 12)}…). Upload again to replace it.
+                      </p>
+                    )}
+                    {isMuxConfigured ? (
+                      <div className="mt-2 space-y-3">
+                        <LessonVideoUploader lessonId={l.id} />
+                        <details>
+                          <summary className="text-xs text-muted cursor-pointer">
+                            or paste a video link (Google Drive / Dropbox / direct URL)
+                          </summary>
+                          <form action={ingestLessonVideo} className="mt-2 flex flex-wrap gap-2">
+                            <input type="hidden" name="lessonId" value={l.id} />
+                            <input type="hidden" name="courseId" value={courseId} />
+                            <input
+                              name="url"
+                              className="input flex-1 min-w-52 text-xs py-1.5"
+                              placeholder="Paste a share link — best for files under 100 MB"
+                            />
+                            <button className="btn-outline text-xs py-1.5">Ingest link</button>
+                          </form>
+                        </details>
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-xs text-muted">
+                        Add Mux keys to enable video uploads.
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
