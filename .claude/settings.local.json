@@ -4,7 +4,8 @@
       "Bash(npm --version)",
       "Bash(git --version)",
       "Bash(curl -s -m 5 -o /dev/null -w \"%{http_code}\" https://registry.npmjs.org)",
-      "Bash(npx --yes create-next-app@latest . --typescript --tailwind --app --src-dir --import-alias \"@/*\" --eslint --use-npm --no-turbopack --yes)"
+      "Bash(npx --yes create-next-app@latest . --typescript --tailwind --app --src-dir --import-alias \"@/*\" --eslint --use-npm --no-turbopack --yes)",
+      "Bash(npm install *)"
     ]
   }
 }
