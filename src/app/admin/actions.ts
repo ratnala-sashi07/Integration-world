@@ -160,16 +160,42 @@ export async function deleteLesson(lessonId: string, courseId: string) {
 }
 
 /**
- * Create a Mux asset from a source URL (e.g. a shared Google Drive direct link)
- * and attach the resulting playback id to a lesson.
+ * Turn common share links into a URL that returns the raw video bytes, which is
+ * what Mux needs to ingest. Google Drive "/view" links serve an HTML page, so we
+ * rewrite them to the direct-download endpoint. Dropbox is handled too.
+ */
+function toDirectVideoUrl(input: string): string {
+  const url = input.trim();
+
+  // Google Drive: /file/d/<ID>/..., open?id=<ID>, uc?id=<ID>, or ...?id=<ID>
+  const driveId =
+    url.match(/drive\.google\.com\/file\/d\/([^/]+)/)?.[1] ??
+    url.match(/[?&]id=([^&]+)/)?.[1];
+  if (url.includes("drive.google.com") && driveId) {
+    return `https://drive.google.com/uc?export=download&id=${driveId}`;
+  }
+
+  // Dropbox: force direct download
+  if (url.includes("dropbox.com")) {
+    return url.replace("?dl=0", "?dl=1").replace("www.dropbox.com", "dl.dropboxusercontent.com");
+  }
+
+  return url;
+}
+
+/**
+ * Create a Mux asset from a source URL (e.g. a shared Google Drive link) and
+ * attach the resulting playback id to a lesson. Mux then downloads and
+ * transcodes the file asynchronously (usually under a couple of minutes).
  */
 export async function ingestLessonVideo(formData: FormData) {
   await assertAdmin();
   if (!isMuxConfigured) throw new Error("Mux is not configured.");
   const lessonId = String(formData.get("lessonId"));
   const courseId = String(formData.get("courseId"));
-  const url = String(formData.get("url") || "").trim();
-  if (!url) throw new Error("Provide a source video URL.");
+  const raw = String(formData.get("url") || "").trim();
+  if (!raw) throw new Error("Provide a source video URL.");
+  const url = toDirectVideoUrl(raw);
 
   const asset = await mux.video.assets.create({
     inputs: [{ url }],
