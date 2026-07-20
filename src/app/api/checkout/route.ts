@@ -37,28 +37,43 @@ export async function POST(req: Request) {
     .maybeSingle();
   if (existing) return NextResponse.json({ url: "/dashboard" });
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    customer_email: user.email ?? undefined,
-    line_items: [
-      course.stripe_price_id
-        ? { price: course.stripe_price_id, quantity: 1 }
-        : {
-            quantity: 1,
-            price_data: {
-              currency: course.currency || "usd",
-              unit_amount: course.price_cents,
-              product_data: {
-                name: course.title,
-                description: course.subtitle ?? undefined,
+  // Stripe requires an absolute http(s) URL for success/cancel. Fall back to the
+  // request origin if NEXT_PUBLIC_SITE_URL isn't a valid URL.
+  let base = env.siteUrl;
+  try {
+    new URL(base);
+  } catch {
+    base = new URL(req.url).origin;
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer_email: user.email ?? undefined,
+      line_items: [
+        course.stripe_price_id
+          ? { price: course.stripe_price_id, quantity: 1 }
+          : {
+              quantity: 1,
+              price_data: {
+                currency: course.currency || "usd",
+                unit_amount: course.price_cents,
+                product_data: {
+                  name: course.title,
+                  description: course.subtitle ?? undefined,
+                },
               },
             },
-          },
-    ],
-    metadata: { courseId, userId: user.id },
-    success_url: `${env.siteUrl}/dashboard?purchased=${course.slug}`,
-    cancel_url: `${env.siteUrl}/courses/${course.slug}?canceled=1`,
-  });
+      ],
+      metadata: { courseId, userId: user.id },
+      success_url: `${base}/dashboard?purchased=${course.slug}`,
+      cancel_url: `${base}/courses/${course.slug}?canceled=1`,
+    });
 
-  return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Could not start checkout.";
+    console.error("Stripe checkout error:", message);
+    return NextResponse.json({ error: `Stripe: ${message}` }, { status: 500 });
+  }
 }

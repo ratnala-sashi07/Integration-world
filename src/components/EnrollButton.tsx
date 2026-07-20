@@ -28,20 +28,35 @@ export function EnrollButton({
     setError(null);
 
     const endpoint = priceCents === 0 ? "/api/enroll" : "/api/checkout";
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ courseId }),
-    });
-    const data = await res.json();
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId }),
+      });
 
-    if (!res.ok) {
-      setError(data.error || "Something went wrong.");
+      // Handle non-JSON responses (e.g. an unexpected 500) gracefully.
+      const text = await res.text();
+      let data: { url?: string; error?: string } = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = { error: `Server error (${res.status}).` };
+      }
+
+      if (!res.ok || data.error) {
+        setError(data.error || `Something went wrong (${res.status}).`);
+        setLoading(false);
+        return;
+      }
+
+      // Free -> learn URL; paid -> Stripe checkout URL.
+      const dest = data.url || (firstLessonId ? `/learn/${firstLessonId}` : "/dashboard");
+      window.location.href = dest;
+    } catch {
+      setError("Network error — please try again.");
       setLoading(false);
-      return;
     }
-    // Free -> we get a learn URL; paid -> Stripe checkout URL.
-    window.location.href = data.url || (firstLessonId ? `/learn/${firstLessonId}` : "/dashboard");
   }
 
   return (
